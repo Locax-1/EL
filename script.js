@@ -17,6 +17,8 @@ const recordPrompt = document.querySelector("#recordPrompt");
 const addBtn = document.querySelector("#addBtn");
 const recordList = document.querySelector("#recordList");
 
+const aiAnalyzeBtn = document.querySelector("#aiAnalyzeBtn");
+
 const historyBtn = document.querySelector("#historyBtn");
 const userBtn = document.querySelector("#userBtn");
 const historyYear = document.querySelector("#historyYear");
@@ -340,3 +342,74 @@ if (getLoggedInUser()) {
 } else {
   showPage("auth");
 }
+
+// 全局变量，用于存储选中的日期范围
+let selectedDateRange = [];
+
+// 1. 绑定按钮点击事件
+aiAnalyzeBtn.addEventListener("click", async function() {
+    if (selectedDateKey) {
+        // 如果只选中了一天，分析这一天
+        selectedDateRange = [selectedDateKey];
+    } else {
+        // 如果没有选中具体日期，默认分析当前月份所有数据
+        // 这里需要遍历当前月的所有天
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        selectedDateRange = [];
+        for (let d = 1; d <= daysInMonth; d++) {
+            const key = dateKey(currentYear, currentMonth, d);
+            const records = getRecords(key);
+            if (records.length > 0) {
+                // 把有记录的日期都加进去
+                selectedDateRange.push(key);
+            }
+        }
+    }
+
+    // 提取详细数据
+    const detailList = [];
+    let totalAmount = 0;
+    selectedDateRange.forEach(date => {
+        const records = getRecords(date);
+        records.forEach(rec => {
+            detailList.push({
+                date: date,
+                type: rec.type,
+                amount: rec.amount
+            });
+            totalAmount += parseFloat(rec.amount) || 0;
+        });
+    });
+
+    if (detailList.length === 0) {
+        alert("没有数据可供分析！");
+        return;
+    }
+
+    // 2. 发送请求到你的后端
+    try {
+        const response = await fetch('http://localhost:5000/api/ai-evaluate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                records: detailList,
+                time_range: `${currentYear}年${currentMonth+1}月` // 简单的时间范围描述
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // 3. 弹出分析结果
+            alert(`📊 AI 财务分析报告:\n\n${result.analysis}`);
+        } else {
+            alert("分析出错: " + result.error);
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert("网络请求失败，请检查后端是否启动。");
+    }
+});
