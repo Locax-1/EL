@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>日历记账</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main id="app">
+    <!-- 页面一：注册 / 登录 -->
+    <section id="authPage" class="page auth-page">
+      <div class="auth-card">
+        <h1>日历记账</h1>
+
+        <form id="authForm" class="auth-form">
+          <label>
+            账号
+            <input id="username" type="text" autocomplete="username" placeholder="请输入账号" />
+          </label>
+
+          <label>
+            密码
+            <input id="password" type="password" autocomplete="current-password" placeholder="请输入密码" />
+          </label>
+
+          <p id="authTip" class="tip"></p>
+
+          <button type="button" id="registerBtn" class="auth-btn register-btn">注册</button>
+          <button type="button" id="loginBtn" class="auth-btn login-btn">登录</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 页面二：日历 / 记账 -->
+    <section id="calendarPage" class="page calendar-page hidden">
+      <div class="left-calendar">
+        <div class="calendar-title">
+          <button id="prevMonthBtn" class="month-nav" title="上个月">‹</button>
+          <span id="monthTitle"></span>
+          <button id="nextMonthBtn" class="month-nav" title="下个月">›</button>
+        </div>
+        <div id="calendarGrid" class="calendar-grid"></div>
+      </div>
+
+      <aside class="right-panel">
+        <div class="top-actions">
+          <button id="historyBtn" class="history-btn">历史查询</button>
+          <button id="userBtn" class="user-btn" title="用户">
+            <span class="user-head"></span>
+            <span class="user-body"></span>
+          </button>
+        </div>
+
+        <div id="recordArea" class="record-area">
+          <p id="recordPrompt" class="record-prompt">单击日期来记账</p>
+          <button id="addBtn" class="add-btn hidden">＋</button>
+          <div id="recordList" class="record-list"></div>
+          <button id="aiAnalyzeBtn" class="auth-btn" style="background:#f0f0f0; margin-top:10px;">🤖 AI 消费分析</button>
+        </div>
+      </aside>
+    </section>
+
+    <!-- 页面三：历史查询 -->
+    <section id="historyPage" class="page history-page hidden">
+      <div class="history-card">
+        <h2 id="historyYear"></h2>
+        <div id="monthList" class="month-list"></div>
+        <button id="backToCalendarBtn" class="back-btn">返回日历</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- 新增记账弹窗 -->
+  <div id="entryModal" class="overlay hidden">
+    <div class="modal">
+      <label class="modal-row">
+        <span>类型</span>
+        <input id="typeInput" type="text" placeholder="例如：早餐" />
+      </label>
+
+      <label class="modal-row">
+        <span>金额</span>
+        <input id="amountInput" type="number" step="0.01" placeholder="例如：12.5" />
+      </label>
+
+      <div class="modal-actions">
+        <button id="cancelEntryBtn">取消</button>
+        <button id="saveEntryBtn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 退出登录弹窗 -->
+  <div id="logoutModal" class="overlay hidden">
+    <div class="modal logout-modal">
+      <p>是否退出登录</p>
+      <div class="modal-actions">
+        <button id="cancelLogoutBtn">取消</button>
+        <button id="confirmLogoutBtn">退出</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./script.js"></script>
+</body>
+</html>

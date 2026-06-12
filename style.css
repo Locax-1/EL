@@ -1,0 +1,383 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+  color: #111;
+  background: #ffffff;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: 1px solid #cfc7b7;
+  background: #fff;
+  border-radius: 10px;
+}
+
+.page {
+  min-height: 100vh;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* 页面一 */
+.auth-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.auth-card {
+  width: min(360px, 90vw);
+  text-align: center;
+}
+
+.auth-card h1 {
+  margin-bottom: 36px;
+  font-size: 28px;
+  font-weight: 400;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-form label {
+  text-align: left;
+  font-size: 15px;
+}
+
+.auth-form input {
+  width: 100%;
+  margin-top: 6px;
+  padding: 11px 12px;
+  border: 1px solid #ddd2be;
+  border-radius: 8px;
+  outline: none;
+}
+
+.tip {
+  min-height: 20px;
+  margin: 0;
+  color: #c0392b;
+  font-size: 14px;
+}
+
+.auth-btn {
+  width: 100%;
+  height: 48px;
+  font-size: 28px;
+  border: none;
+  background: transparent;
+}
+
+.register-btn {
+  color: #23a455;
+}
+
+.login-btn {
+  color: #1f73d8;
+}
+
+/* 页面二 */
+.calendar-page {
+  display: flex;
+  padding: 34px;
+  gap: 28px;
+}
+
+.left-calendar {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.calendar-title {
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  font-size: 30px;
+}
+
+.month-nav {
+  width: 42px;
+  height: 38px;
+  font-size: 26px;
+  line-height: 1;
+  border-color: #eadfcf;
+  background: #fffaf1;
+}
+
+.calendar-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: minmax(58px, 1fr);
+  border: 1px solid #e6d8c7;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.week-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5ecd9;
+  border-right: 1px solid #e6d8c7;
+  border-bottom: 1px solid #e6d8c7;
+  font-weight: 400;
+}
+
+.day-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid rgba(220, 190, 190, 0.45);
+  border-bottom: 1px solid rgba(220, 190, 190, 0.45);
+  color: #111;
+  font-weight: 400;
+  border-radius: 0;
+}
+
+.day-cell:hover {
+  outline: 3px solid rgba(244, 160, 176, 0.35);
+  outline-offset: -3px;
+}
+
+.day-cell.empty {
+  background: #fff;
+  cursor: default;
+}
+
+.day-cell.today {
+  font-weight: 700;
+  font-size: 32px;
+}
+
+.day-cell.selected {
+  box-shadow: inset 0 0 0 4px rgba(170, 80, 105, 0.25);
+}
+
+.right-panel {
+  flex: 1;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+}
+
+.top-actions {
+  display: grid;
+  grid-template-columns: 1fr 74px;
+  gap: 0;
+  height: 62px;
+  margin-bottom: 0;
+}
+
+.history-btn {
+  border-radius: 12px 0 0 0;
+  background: #f5ecd9;
+  border: 1px solid #e3d2ba;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.user-btn {
+  position: relative;
+  border-radius: 0 12px 0 0;
+  background: #f5ecd9;
+  border: 1px solid #e3d2ba;
+  border-left: 0;
+}
+
+.user-head {
+  position: absolute;
+  left: 25px;
+  top: 12px;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #111;
+  border-radius: 50%;
+}
+
+.user-body {
+  position: absolute;
+  left: 18px;
+  top: 35px;
+  width: 36px;
+  height: 18px;
+  border: 2px solid #111;
+  border-bottom: none;
+  border-radius: 22px 22px 0 0;
+}
+
+.record-area {
+  flex: 1;
+  min-height: 0;
+  padding: 28px 24px;
+  background: #f5ecd9;
+  border: 1px solid #e3d2ba;
+  border-top: 0;
+  border-radius: 0 0 18px 18px;
+  overflow: auto;
+}
+
+.record-prompt {
+  margin: 0 0 22px;
+  font-size: 22px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.add-btn {
+  width: 52px;
+  height: 52px;
+  margin-bottom: 18px;
+  border-radius: 50%;
+  font-size: 34px;
+  line-height: 1;
+  background: #fffaf1;
+}
+
+.record-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 17px;
+}
+
+.record-row {
+  display: grid;
+  grid-template-columns: 44px 1fr 90px;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.45);
+  border-radius: 8px;
+}
+
+/* 页面三 */
+.history-page {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: #dcf0d8;
+  padding: 60px 24px;
+}
+
+.history-card {
+  width: min(620px, 92vw);
+  text-align: center;
+}
+
+.history-card h2 {
+  margin: 0 0 26px;
+  font-size: 34px;
+  font-weight: 400;
+}
+
+.month-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.month-item,
+.back-btn {
+  min-height: 48px;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  color: #111;
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.back-btn {
+  margin-top: 26px;
+  padding: 0 24px;
+}
+
+/* 弹窗 */
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.48);
+  z-index: 10;
+}
+
+.modal {
+  width: min(360px, 86vw);
+  padding: 24px;
+  background: #fffaf1;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.modal-row {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.modal-row input {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #d8c8b2;
+  border-radius: 8px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.modal-actions button {
+  flex: 1;
+  height: 42px;
+  background: #fff;
+}
+
+.logout-modal p {
+  margin: 0 0 24px;
+  text-align: center;
+  font-size: 20px;
+}
+
+/* 小屏适配 */
+@media (max-width: 760px) {
+  .calendar-page {
+    flex-direction: column;
+    padding: 18px;
+  }
+
+  .right-panel {
+    min-height: 320px;
+  }
+
+  .record-prompt {
+    font-size: 20px;
+  }
+
+  .calendar-grid {
+    grid-auto-rows: 48px;
+  }
+}
