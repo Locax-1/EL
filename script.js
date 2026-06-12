@@ -388,7 +388,7 @@ aiAnalyzeBtn.addEventListener("click", async function() {
 
     // 2. 发送请求到你的后端
     try {
-        const response = await fetch('http://localhost:5000/api/ai-evaluate', {
+        const response = await fetch('https://el-ircv.vercel.app/api/ai-evaluate', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
