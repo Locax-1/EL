@@ -432,6 +432,7 @@ queryRangeBtn.addEventListener("click", async function() {
     // 遍历所有记录，筛选出在时间范围内的数据
     // 注意：这里的 allRecords 需要替换为你实际存储数据的变量名
     const filteredRecords = [];
+    const allRecordsObj = getAllRecords();
     for (const [dateKey, records] of Object.entries(allRecords)) {
         if (dateKey >= start && dateKey <= end) {
             records.forEach(rec => {
