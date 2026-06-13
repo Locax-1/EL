@@ -87,7 +87,7 @@ def query_range():
         records_str = "\n".join([f"日期:{r['date']}, 类型:{r['type']}, 金额:{r['amount']}" for r in records])
         
         prompt = f"""
-        你是一个专业的财务数据分析师。以下是用户在 {start/日期} 到 {end_date} 期间的原始消费记录：
+        你是一个专业的财务数据分析师。以下是用户在 {start_date} 到 {end_date} 期间的原始消费记录：
         {records_str}
         
         请帮我将这些记录进行“语义合并”和“分类归一化”。
