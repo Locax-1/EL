@@ -343,3 +343,90 @@ if (getLoggedInUser()) {
   showPage("auth");
 }
 
+// ==========================================
+// 【适配新版 HTML】智能分析功能逻辑
+// ==========================================
+
+// 1. 获取 DOM 元素 (适配新 HTML 的 class 和 id)
+// 注意：按钮使用了 class="btn-primary"，结果区使用了 id="resultArea"
+const analyzeBtn = document.querySelector(".btn-primary"); 
+const startDateInput = document.querySelector("#startDate");
+const endDateInput = document.querySelector("#endDate");
+const resultArea = document.querySelector("#resultArea");
+const aiAdviceText = document.querySelector("#aiAdviceText");
+
+// 2. 配置后端 API 地址
+const AI_API_URL = "https://el-ircv.vercel.app/api/query-range"; 
+
+// 3. 绑定按钮点击事件
+if (analyzeBtn) {
+    analyzeBtn.addEventListener("click", async function() {
+        const start = startDateInput.value;
+        const end = endDateInput.value;
+        
+        if (!start || !end) {
+            alert("请选择完整的起始和截止日期！");
+            return;
+        }
+
+        // 4. 筛选时间范围内的数据
+        const filteredRecords = [];
+        const allRecordsObj = getAllRecords();
+        
+        const startDateObj = new Date(start);
+        const endDateObj = new Date(end);
+
+        for (const [dateKey, records] of Object.entries(allRecordsObj)) {
+            const recordDateObj = new Date(dateKey);
+            if (recordDateObj >= startDateObj && recordDateObj <= endDateObj) {
+                records.forEach(rec => {
+                    filteredRecords.push({
+                        date: dateKey,
+                        type: rec.type,
+                        amount: parseFloat(rec.amount) || 0
+                    });
+                });
+            }
+        }
+
+        if (filteredRecords.length === 0) {
+            alert("该时间段内没有消费记录！");
+            return;
+        }
+
+        // 5. 开始分析（显示加载状态）
+        resultArea.style.display = 'block';
+        aiAdviceText.textContent = "AI 正在分析你的消费习惯并生成理财建议，请稍候...";
+
+        try {
+            const response = await fetch(AI_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    start_date: start,
+                    end_date: end,
+                    records: filteredRecords
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // 6. 展示 AI 建议 (result.evaluation 是后端返回的建议文本)
+                aiAdviceText.innerHTML = result.evaluation
+                    .replace(/\n\n/g, '<br><br>') // 处理段落换行
+                    .replace(/\n/g, '<br>');    // 处理普通换行
+            } else {
+                aiAdviceText.textContent = `分析失败: ${result.error}`;
+            }
+        } catch (error) {
+            console.error('请求错误:', error);
+            aiAdviceText.textContent = "网络连接失败，请检查后端服务是否启动。";
+        }
+    });
+}
+
+// --- 页面初始化逻辑 (请确保这段在文件最后) ---
+// 如果你之前有登录逻辑，请保留下面这行
+// checkLoginStatus(); 
+//https://el-ircv.vercel.app/api/query-range
