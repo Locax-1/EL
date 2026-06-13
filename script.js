@@ -413,3 +413,64 @@ aiAnalyzeBtn.addEventListener("click", async function() {
         alert("网络请求失败，请检查后端是否启动。");
     }
 });
+// 获取新增的 DOM 元素
+const startDateInput = document.querySelector("#startDate");
+const endDateInput = document.querySelector("#endDate");
+const queryRangeBtn = document.querySelector("#queryRangeBtn");
+const rangeResultDiv = document.querySelector("#rangeResult");
+
+// 绑定查询按钮的点击事件
+queryRangeBtn.addEventListener("click", async function() {
+    const start = startDateInput.value;
+    const end = endDateInput.value;
+    
+    if (!start || !end) {
+        alert("请选择完整的起始和截止日期！");
+        return;
+    }
+    
+    // 遍历所有记录，筛选出在时间范围内的数据
+    // 注意：这里的 allRecords 需要替换为你实际存储数据的变量名
+    const filteredRecords = [];
+    for (const [dateKey, records] of Object.entries(allRecords)) {
+        if (dateKey >= start && dateKey <= end) {
+            records.forEach(rec => {
+                filteredRecords.push({
+                    date: dateKey,
+                    type: rec.type,
+                    amount: parseFloat(rec.amount) || 0
+                });
+            });
+        }
+    }
+    
+    if (filteredRecords.length === 0) {
+        rangeResultDiv.style.display = 'block';
+        rangeResultDiv.innerText = "⚠️ 该时间段内没有消费记录。";
+        return;
+    }
+    
+    // 发送请求到后端
+    rangeResultDiv.style.display = 'block';
+    rangeResultDiv.innerText = "⏳ 正在统计中...";
+    try {
+        const response = await fetch('https://el-ircv.vercel.app/api/query-range', { // ⚠️ 记得替换成你的 Vercel 域名
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                start_date: start,
+                end_date: end,
+                records: filteredRecords
+            })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            rangeResultDiv.innerText = result.summary;
+        } else {
+            rangeResultDiv.innerText = "查询失败: " + result.error;
+        }
+    } catch (error) {
+        rangeResultDiv.innerText = "网络请求失败，请检查后端。";
+    }
+});
