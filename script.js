@@ -433,7 +433,8 @@ queryRangeBtn.addEventListener("click", async function() {
     // 注意：这里的 allRecords 需要替换为你实际存储数据的变量名
     const filteredRecords = [];
     const allRecordsObj = getAllRecords();
-    for (const [dateKey, records] of Object.entries(allRecords)) {
+    
+    for (const [dateKey, records] of Object.entries(allRecordsObj)) {
         if (dateKey >= start && dateKey <= end) {
             records.forEach(rec => {
                 filteredRecords.push({
