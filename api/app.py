@@ -8,6 +8,7 @@ from flask import Flask
 app = Flask(__name__)
 
 from flask import Flask, request, jsonify
+from collections import defaultdict
 import dashscope
 from dashscope import Generation
 
@@ -67,6 +68,41 @@ def ai_evaluate():
             'success': False,
             'error': str(e)
         })
+# 新增一个查询区间消费的接口
+@app.route('/api/query-range', methods=['POST'])
+def query_range():
+    data = request.json
+    start_date = data.get('start_date')
+    end_date = data.get('end_date')
+    records = data.get('records', [])
+    
+    # 1. 使用字典进行同类型合并计算
+    category_stats = defaultdict(float)
+    total_amount = 0.0
+    
+    for record in records:
+        category = record.get('type', '未分类')
+        amount = record.get('amount', 0.0)
+        category_stats[category] += amount
+        total_amount += amount
+    
+    # 2. 按照金额从大到小排序
+    sorted_categories = sorted(category_stats.items(), key=lambda x: x[1], reverse=True)
+    
+    # 3. 格式化输出文本
+    summary_text = f"📅 统计周期：{start_date} 至 {end_date}\n"
+    summary_text += f"💰 总消费金额：¥{total_amount:.2f}\n\n"
+    summary_text += "📊 各分类明细：\n"
+    
+    for cat, amt in sorted_categories:
+        # 计算占比
+        percentage = (amt / total_amount * 100) if total_amount > 0 else 0
+        summary_text += f"- {cat}: ¥{amt:.2f} ({percentage:.1f}%)\n"
+        
+    return jsonify({
+        'success': True,
+        'summary': summary_text
+    })
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
