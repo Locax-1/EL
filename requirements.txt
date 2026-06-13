@@ -1,3 +1,4 @@
 flask
 dashscope
+requests
 flask-cors

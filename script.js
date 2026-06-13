@@ -370,7 +370,7 @@ if (analyzeBtn) {
 
         try {
             // --- 配置区域 ---
-            // 上线后请改为你的真实域名，例如: "https://my-api.vercel.app/api/query-range"
+            // 上线后请改为你的真实域名，例如: "https://my-api.vercel.app/api/"
             const API_URL = "https://el-ircv.vercel.app/api/query-range";
 
             // 2. 发送请求
