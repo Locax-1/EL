@@ -407,3 +407,27 @@ button {
 .btn-primary:hover {
     background-color: #45a049;
 }
+/* 统计卡片样式 */
+.stat-card {
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.stat-card h3 {
+    margin-top: 0;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.total-amount {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.category-list {
+    font-size: 0.9rem;
+    color: #555;
+}

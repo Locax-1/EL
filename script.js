@@ -344,88 +344,103 @@ if (getLoggedInUser()) {
 }
 
 // ==========================================
-// 【适配新版 HTML】智能分析功能逻辑
+// 【最终版】智能分析 + 消费统计 完整逻辑
 // ==========================================
 
-// 1. 获取 DOM 元素 (适配新 HTML 的 class 和 id)
-// 注意：按钮使用了 class="btn-primary"，结果区使用了 id="resultArea"
-const analyzeBtn = document.querySelector(".btn-primary"); 
-const startDateInput = document.querySelector("#startDate");
-const endDateInput = document.querySelector("#endDate");
-const resultArea = document.querySelector("#resultArea");
-const aiAdviceText = document.querySelector("#aiAdviceText");
+const analyzeBtn = document.querySelector(".btn-primary"); // 那个大按钮
+const startDateInput = document.getElementById("startDate");
+const endDateInput = document.getElementById("endDate");
+const resultArea = document.getElementById("resultArea");
 
-// 2. 配置后端 API 地址
-const AI_API_URL = "https://el-ircv.vercel.app/api/query-range"; 
-
-// 3. 绑定按钮点击事件
 if (analyzeBtn) {
-    analyzeBtn.addEventListener("click", async function() {
-        const start = startDateInput.value;
-        const end = endDateInput.value;
-        
-        if (!start || !end) {
-            alert("请选择完整的起始和截止日期！");
+    analyzeBtn.addEventListener("click", async () => {
+        const startVal = startDateInput.value;
+        const endVal = endDateInput.value;
+
+        if (!startVal || !endVal) {
+            alert("请选择开始和结束日期！");
             return;
         }
 
-        // 4. 筛选时间范围内的数据
-        const filteredRecords = [];
-        const allRecordsObj = getAllRecords();
-        
-        const startDateObj = new Date(start);
-        const endDateObj = new Date(end);
-
-        for (const [dateKey, records] of Object.entries(allRecordsObj)) {
-            const recordDateObj = new Date(dateKey);
-            if (recordDateObj >= startDateObj && recordDateObj <= endDateObj) {
-                records.forEach(rec => {
-                    filteredRecords.push({
-                        date: dateKey,
-                        type: rec.type,
-                        amount: parseFloat(rec.amount) || 0
-                    });
-                });
-            }
-        }
-
-        if (filteredRecords.length === 0) {
-            alert("该时间段内没有消费记录！");
-            return;
-        }
-
-        // 5. 开始分析（显示加载状态）
-        resultArea.style.display = 'block';
-        aiAdviceText.textContent = "AI 正在分析你的消费习惯并生成理财建议，请稍候...";
+        // 1. 界面状态：显示加载中
+        analyzeBtn.disabled = true;
+        analyzeBtn.innerText = "正在分析...";
+        resultArea.style.display = "block";
+        resultArea.innerHTML = `<div style="text-align:center; padding:20px;">⏳ 正在连接财务顾问...</div>`;
 
         try {
-            const response = await fetch(AI_API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            // --- 配置区域 ---
+            // 上线后请改为你的真实域名，例如: "https://my-api.vercel.app/api/query-range"
+            const API_URL = "https://el-ircv.vercel.app/api/query-range";
+
+            // 2. 发送请求
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    start_date: start,
-                    end_date: end,
-                    records: filteredRecords
+                    start_date: startVal,
+                    end_date: endVal
                 })
             });
 
-            const result = await response.json();
+            if (!response.ok) throw new Error("网络请求失败");
+            const resultData = await response.json();
 
-            if (result.success) {
-                // 6. 展示 AI 建议 (result.evaluation 是后端返回的建议文本)
-                aiAdviceText.innerHTML = result.evaluation
-                    .replace(/\n\n/g, '<br><br>') // 处理段落换行
-                    .replace(/\n/g, '<br>');    // 处理普通换行
-            } else {
-                aiAdviceText.textContent = `分析失败: ${result.error}`;
+            // 3. 渲染页面内容
+            let htmlContent = "";
+
+            // A. 显示【消费统计】 (这是你截图上方缺失的部分)
+            if (resultData.total_amount !== undefined) {
+                htmlContent += `
+                    <div class="stat-card">
+                        <h3>📊 消费统计 (${startVal} ~ ${endVal})</h3>
+                        <div class="total-amount">总支出：<span style="color:#e74c3c; font-size:1.5em;">¥${Number(resultData.total_amount).toFixed(2)}</span></div>
+                        
+                        <!-- 分类详情 -->
+                        <div class="category-list" style="margin-top:15px; text-align:left;">
+                            <strong>支出明细：</strong><br>
+                `;
+
+                // 如果有后端传来的分类统计
+                if (resultData.category_breakdown && Object.keys(resultData.category_breakdown).length > 0) {
+                    for (const [cat, info] of Object.entries(resultData.category_breakdown)) {
+                        htmlContent += `<div style="display:flex; justify-content:space-between; border-bottom:1px dashed #eee; padding:5px 0;">
+                                            <span>${cat}</span>
+                                            <span>¥${info.amount} (${info.percentage}%)</span>
+                                        </div>`;
+                    }
+                } else {
+                    htmlContent += `<div style="color:#999; font-size:0.9em;">暂无详细分类数据</div>`;
+                }
+
+                htmlContent += `</div></div><hr style="border:0; border-top:1px solid #eee; margin:20px 0;">`;
             }
+
+            // B. 显示【AI 财务顾问建议】 (这是你截图下方已有的部分)
+            if (resultData.ai_advice) {
+                htmlContent += `
+                    <div class="ai-advice-box" style="background:#f0f7ff; padding:15px; border-radius:8px; border-left:4px solid #3498db;">
+                        <h3 style="margin-top:0; color:#2c3e50;">💡 AI 财务顾问建议</h3>
+                        <p style="line-height:1.6; color:#34495e;">${resultData.ai_advice}</p>
+                    </div>
+                `;
+            } else {
+                htmlContent += `<p style="color:red;">未获取到 AI 建议。</p>`;
+            }
+
+            // 将生成的 HTML 放入容器
+            resultArea.innerHTML = htmlContent;
+
         } catch (error) {
-            console.error('请求错误:', error);
-            aiAdviceText.textContent = "网络连接失败，请检查后端服务是否启动。";
+            console.error(error);
+            resultArea.innerHTML = `<div style="color:red; padding:20px;">❌ 分析失败：${error.message}<br>请检查网络或后端服务是否启动。</div>`;
+        } finally {
+            // 恢复按钮状态
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerText = "开始智能分析";
         }
     });
 }
-
 // --- 页面初始化逻辑 (请确保这段在文件最后) ---
 // 如果你之前有登录逻辑，请保留下面这行
 // checkLoginStatus(); 
