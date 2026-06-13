@@ -108,4 +108,7 @@ def query_range():
         print(f"Error: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
+
 # 注意：不要写 if __name__ == '__main__': app.run()，Vercel 不需要这个
