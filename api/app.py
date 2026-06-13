@@ -1,11 +1,13 @@
-from flask import Flask, request, jsonify
+from flask import Flask
 from flask_cors import CORS
-from collections import defaultdict
-import dashscope
-from dashscope import Generation
 
 app = Flask(__name__)
-CORS(app)  # 允许跨域
+CORS(app) # 允许所有来源的跨域请求
+
+from flask import Flask
+app = Flask(__name__)
+
+from flask import Flask, request, jsonify
 from collections import defaultdict
 import dashscope
 from dashscope import Generation
