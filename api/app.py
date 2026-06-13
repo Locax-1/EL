@@ -1,37 +1,37 @@
 import json
 import re
-
-from flask import Flask
-from flask_cors import CORS
-
-app = Flask(__name__)
-CORS(app) # 允许所有来源的跨域请求
-
-from flask import Flask
-app = Flask(__name__)
-
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from collections import defaultdict
 import dashscope
 from dashscope import Generation
 
 app = Flask(__name__)
+# 允许跨域，支持 OPTIONS 预检请求
+CORS(app)
 
-# 设置你的 API Key（请替换成你自己的 Key）
+# 设置你的 API Key
 dashscope.api_key = "sk-ws-H.REDRMDY.JZ2P.MEUCIHEC0_h3rgEPSbS97amm_63xYVluF0HanOeX8mXdZwPJAiEAxvT0RJxeCgHeVnM0xnDgVCQO5uuX_Y0Ivlhtn8sV5nM"
 
+# --- 新增：根路径路由 ---
+# Vercel 部署 Python 时，必须能响应根路径 / 的请求，否则会报 404 或无法启动
+@app.route('/')
+def home():
+    return jsonify({"message": "Server is running! Go to /api/query-range"}), 200
+
+# --- 原有的 API 路由 ---
 @app.route('/api/query-range', methods=['POST'])
 def query_range():
-    data = request.json
-    start_date = data.get('start_date')
-    end_date = data.get('end_date')
-    records = data.get('records', [])
-    
-    if not records:
-        return jsonify({'success': False, 'error': '没有可分析的数据'})
-
     try:
-        # --- 第一阶段：数据清洗与分类归一化 (保持不变) ---
+        data = request.json
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        records = data.get('records', [])
+
+        if not records:
+            return jsonify({'success': False, 'error': '没有可分析的数据'})
+
+        # --- 第一阶段：数据清洗与分类归一化 ---
         records_str = "\n".join([f"日期:{r['date']}, 类型:{r['type']}, 金额:{r['amount']}" for r in records])
         prompt_stats = f"""
         你是一个专业的财务数据分析师。以下是用户在 {start_date} 到 {end_date} 期间的原始消费记录：
@@ -49,27 +49,24 @@ def query_range():
             ]
         }}
         """
-        
-        response_stats = dashscope.Generation.call(
+
+        response_stats = Generation.call(
             model='qwen-turbo',
             messages=[{'role': 'user', 'content': prompt_stats}],
             result_format='message'
         )
-        
+
         if response_stats.status_code != 200:
             raise Exception(f"API 调用失败: {response_stats.message}")
-            
+
         content_stats = response_stats.output.choices[0].message.content
         # 清理可能存在的 markdown 代码块标记
         content_stats = re.sub(r'^```json\s*', '', content_stats).strip()
         content_stats = re.sub(r'\s*```$', '', content_stats).strip()
         stats_data = json.loads(content_stats)
 
-        # --- 数据重塑：将 AI 返回的结构转换为前端需要的结构 ---
-        # 前端需要: total_amount (数字) 和 category_breakdown (列表，含百分比)
+        # --- 数据重塑 ---
         total_amount = stats_data['total_spent']
-        
-        # 计算百分比并重命名字段
         category_breakdown = []
         for cat in stats_data['categories']:
             percentage = round((cat['amount'] / total_amount) * 100, 1)
@@ -79,7 +76,7 @@ def query_range():
                 "percentage": percentage
             })
 
-        # --- 第二阶段：AI 财务健康评估 (保持不变) ---
+        # --- 第二阶段：AI 财务健康评估 ---
         categories_summary = ", ".join([f"{c['name']}({c['amount']}元)" for c in stats_data['categories']])
         prompt_eval = f"""
         基于以下 {start_date} 到 {end_date} 的消费统计数据，请给出一份简短、专业且贴心的财务评估建议（建议尽量详细）：
@@ -88,8 +85,8 @@ def query_range():
         请从消费结构是否合理、是否存在冲动消费风险、以及下阶段的理财建议三个角度进行分析。
         语气要像一位老朋友一样亲切。
         """
-        
-        response_eval = dashscope.Generation.call(
+
+        response_eval = Generation.call(
             model='qwen-turbo',
             messages=[{'role': 'user', 'content': prompt_eval}],
             result_format='message'
@@ -99,19 +96,16 @@ def query_range():
         if response_eval.status_code == 200:
             ai_advice = response_eval.output.choices[0].message.content
 
-        # --- 最终返回：使用适配前端的新结构 ---
-        return jsonify({ 
+        # --- 最终返回 ---
+        return jsonify({
             'success': True,
-            'total_amount': total_amount,       # 直接平铺，方便前端读取
-            'category_breakdown': category_breakdown, # 带百分比的列表
-            'ai_advice': ai_advice              # AI 建议
+            'total_amount': total_amount,
+            'category_breakdown': category_breakdown,
+            'ai_advice': ai_advice
         })
 
     except Exception as e:
         print(f"Error: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)})
-    
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-#sk-ws-H.REDRMDY.JZ2P.MEUCIHEC0_h3rgEPSbS97amm_63xYVluF0HanOeX8mXdZwPJAiEAxvT0RJxeCgHeVnM0xnDgVCQO5uuX_Y0Ivlhtn8sV5nM
+# 注意：不要写 if __name__ == '__main__': app.run()，Vercel 不需要这个
