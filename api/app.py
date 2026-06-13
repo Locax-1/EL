@@ -1,3 +1,6 @@
+import json
+import re
+
 from flask import Flask
 from flask_cors import CORS
 
@@ -68,7 +71,7 @@ def ai_evaluate():
             'success': False,
             'error': str(e)
         })
-# 新增一个查询区间消费的接口
+
 @app.route('/api/query-range', methods=['POST'])
 def query_range():
     data = request.json
@@ -76,33 +79,68 @@ def query_range():
     end_date = data.get('end_date')
     records = data.get('records', [])
     
-    # 1. 使用字典进行同类型合并计算
-    category_stats = defaultdict(float)
-    total_amount = 0.0
-    
-    for record in records:
-        category = record.get('type', '未分类')
-        amount = record.get('amount', 0.0)
-        category_stats[category] += amount
-        total_amount += amount
-    
-    # 2. 按照金额从大到小排序
-    sorted_categories = sorted(category_stats.items(), key=lambda x: x[1], reverse=True)
-    
-    # 3. 格式化输出文本
-    summary_text = f"📅 统计周期：{start_date} 至 {end_date}\n"
-    summary_text += f"💰 总消费金额：¥{total_amount:.2f}\n\n"
-    summary_text += "📊 各分类明细：\n"
-    
-    for cat, amt in sorted_categories:
-        # 计算占比
-        percentage = (amt / total_amount * 100) if total_amount > 0 else 0
-        summary_text += f"- {cat}: ¥{amt:.2f} ({percentage:.1f}%)\n"
-        
-    return jsonify({
-        'success': True,
-        'summary': summary_text
-    })
+    if not records:
+        return jsonify({'success': False, 'error': '没有可分析的数据'})
 
+    try:
+        # 1. 构建 Prompt，让 AI 进行语义合并和分类归一化
+        records_str = "\n".join([f"日期:{r['date']}, 类型:{r['type']}, 金额:{r['amount']}" for r in records])
+        
+        prompt = f"""
+        你是一个专业的财务数据分析师。以下是用户在 {start/日期} 到 {end_date} 期间的原始消费记录：
+        {records_str}
+        
+        请帮我将这些记录进行“语义合并”和“分类归一化”。
+        例如，将“午餐”、“晚餐”、“请客吃饭”、“麦当劳”统一归类为“餐饮”；将“滴滴”、“地铁”、“打车”、“公交”统一归类为“交通”；将“购物”、“淘宝”、“京东”、“拼多多”统一归类为“购物”；将“电影”、“游戏”、“旅游”统一归类为“娱乐”。
+
+        请严格只返回一个 JSON 数组，不要包含任何其他解释文字。格式如下：
+        [
+            {{"type": "餐饮", "amount": 45.0}},
+            {{"type": "交通", "amount": 120.0}}
+        ]
+        """
+        
+        # 2. 调用通义千问大模型
+        response = Generation.call(
+            model="qwen-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            result_format='message'
+        )
+        
+        # 3. 解析 AI 返回的内容
+        ai_content = response.output.choices[0].message.content
+        
+        # 4. 提取 JSON 部分（容错处理）
+        json_match = re.search(r'\[\s*{.*}\s*\]', ai_content, re.DOTALL)
+        if not json_match:
+            raise ValueError("AI 返回内容中未找到有效的 JSON 数组")
+            
+        normalized_records = json.loads(json_match.group(0))
+        
+        # 5. Python 进行精确计算
+        category_stats = defaultdict(float)
+        total_amount = 0.0
+        
+        for record in normalized_records:
+            category = record.get('type', '未分类')
+            amount = float(record.get('amount', 0.0))
+            category_stats[category] += amount
+            total_amount += amount
+            
+        sorted_categories = sorted(category_stats.items(), key=lambda x: x[1], reverse=True)
+        
+        # 6. 格式化输出文本
+        summary_text = f"📅 统计周期：{start_date} 至 {end_date}\n"
+        summary_text += f"💰 总消费金额：¥{total_amount:.2f}\n\n"
+        summary_text += "🤖 AI 智能分类明细：\n"
+        for cat, amt in sorted_categories:
+            percentage = (amt / total_amount * 100) if total_amount > 0 else 0
+            summary_text += f"- {cat}: ¥{amt:.2f} ({percentage:.1f}%)\n"
+            
+        return jsonify({'success': True, 'summary': summary_text})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': f"AI 分析出错: {str(e)}"})
+    
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
