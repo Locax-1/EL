@@ -62,12 +62,26 @@
               <span>至</span>
               <input type="date" id="endDate" style="flex: 1; padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
           </div>
-          <button id="queryRangeBtn" class="auth-btn" style="background:#4CAF50; color:white; width:100%; padding: 10px; border:none; border-radius: 4px; cursor: pointer;">📊 查询区间消费</button>
+          <!-- 操作按钮区 -->
+          <div class="action-buttons">
+              <!-- 合并后的唯一按钮 -->
+              <button id="analyzeBtn" class="btn-primary">选择时间范围并开始智能分析吧！</button>
+          </div>
 
-          <!-- 用于展示结果的区域 -->
-          <div id="rangeResult" style="margin-top: 15px; font-size: 14px; color: #333; white-space: pre-wrap; background: #f9f9f9; padding: 10px; border-radius: 4px; display: none;"></div>
-          
-          <button id="aiAnalyzeBtn" class="auth-btn" style="background:#f0f0f0; margin-top:10px;">🤖 AI 消费分析</button>
+          <!-- 结果展示区 -->
+          <div id="resultArea" style="display:none; margin-top: 20px;">
+              <!-- 统计图表容器 -->
+              <div class="card">
+                  <h3>📊 消费统计</h3>
+                  <div id="chartContainer" style="height: 300px;"></div>
+              </div>
+
+              <!-- 新增：AI 评估卡片 -->
+              <div class="card" style="margin-top: 15px; background-color: #f0f9ff; border-left: 4px solid #3b82f6;">
+                  <h3>💡 AI 财务顾问建议</h3>
+                  <p id="aiAdviceText" style="line-height: 1.6; color: #333;">正在生成评估...</p>
+              </div>
+          </div>
         </div>
       </aside>
     </section>
