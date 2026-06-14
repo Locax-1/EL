@@ -394,35 +394,38 @@ if (analyzeBtn) {
             // 3. 渲染页面内容
             let htmlContent = "";
 
-            // A. 显示【消费统计】 (这是你截图上方缺失的部分)
-            if (resultData.total_amount !== undefined) {
+            // A. 显示【消费统计】
+            // 使用可选链和空值合并，确保即使数据缺失也不会报错
+            const totalAmount = resultData.total_amount ?? 0;
+            const categoryBreakdown = resultData.category_breakdown || [];
+
+            // 开始构建 HTML
+            htmlContent += `
+                <div class="stat-card">
+                    <h3>📊 消费统计 (${startVal} ~ ${endVal})</h3>
+                    <div class="total-amount">总支出：<span style="color:#e74c3c; font-size:1.5em;">¥${Number(totalAmount).toFixed(2)}</span></div>
+                    <!-- 分类详情 -->
+                    <div class="category-list" style="margin-top:15px; text-align:left;"> 
+                        <strong>支出明细：</strong><br> 
+            `;
+
+            // 直接遍历数组
+            for (const item of categoryBreakdown) {
                 htmlContent += `
-                    <div class="stat-card">
-                        <h3>📊 消费统计 (${startVal} ~ ${endVal})</h3>
-                        <div class="total-amount">总支出：<span style="color:#e74c3c; font-size:1.5em;">¥${Number(resultData.total_amount).toFixed(2)}</span></div>
-                        
-                        <!-- 分类详情 -->
-                        <div class="category-list" style="margin-top:15px; text-align:left;">
-                            <strong>支出明细：</strong><br>
+                    <div style="display:flex; justify-content:space-between; border-bottom:1px dashed #eee; padding:5px 0;">
+                        <span>${item.name}</span>
+                        <span>¥${item.amount} (${item.percentage}%)</span>
+                    </div>
                 `;
-
-                // 如果有后端传来的分类统计
-                if (resultData.category_breakdown && resultData.category_breakdown.length > 0) {
-                    // 使用 for...of 直接遍历数组中的每一项
-                    for (const item of resultData.category_breakdown) {
-                        htmlContent += `
-                            <div style="display:flex; justify-content:space-between; border-bottom:1px dashed #eee; padding:5px 0;">
-                                <span>${item.name}</span>
-                                <span>¥${item.amount} (${item.percentage}%)</span>
-                            </div>
-                        `;
-                    }
-                } else {
-                    htmlContent += `<div style="color:#999; font-size:0.9em;">暂无详细分类数据</div>`;
-                }
-
-                htmlContent += `</div></div><hr style="border:0; border-top:1px solid #eee; margin:20px 0;">`;
             }
+
+            // 如果分类数据为空，显示提示
+            if (categoryBreakdown.length === 0) {
+                htmlContent += `<div style="color:#999; font-size:0.9em;">暂无详细分类数据</div>`;
+            }
+
+            // 关闭标签
+            htmlContent += `</div></div><hr style="border:0; border-top:1px solid #eee; margin:20px 0;">`;
 
             // B. 显示【AI 财务顾问建议】 (这是你截图下方已有的部分)
             if (resultData.ai_advice) {
