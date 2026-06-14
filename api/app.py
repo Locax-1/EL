@@ -23,18 +23,28 @@ dashscope.api_key = "sk-ws-H.REDRMDY.JZ2P.MEUCIHEC0_h3rgEPSbS97amm_63xYVluF0HanO
 @app.route('/api/query-range', methods=['POST'])
 def query_range():
     data = request.json
-    start_date = data.get('start_date')
-    end_date = data.get('end_date')
+    raw_start = data.get('start_date')
+    raw_end = data.get('end_date')
     records = data.get('records', [])
     
     if not records:
         return jsonify({'success': False, 'error': '没有可分析的数据'})
 
     try:
-        # --- 第一阶段：数据清洗与分类归一化 (保持不变) ---
+        # --- 日期格式标准化 ---
+        try:
+            start_date = datetime.strptime(raw_start, "%Y-%m-%d").strftime("%Y年%m月%d日")
+            end_date = datetime.strptime(raw_end, "%Y-%m-%d").strftime("%Y年%m月%d日")
+        except Exception as e:
+            # 兼容旧逻辑，如果转换失败则使用原始值
+            start_date = raw_start
+            end_date = raw_end
+
+        # --- 第一阶段：数据清洗与分类归一化 ---
         records_str = "\n".join([f"日期:{r['date']}, 类型:{r['type']}, 金额:{r['amount']}" for r in records])
+        
         prompt_stats = f"""
-        你是一个专业的财务数据分析师。以下是用户在 {start_date} 到 {end_date} 期间的原始消费记录：
+        你是一个专业的财务数据分析师。以下是用户在 {start_man} 到 {end_date} 期间的原始消费记录：
         {records_str}
         请执行以下任务：
         1. 对消费类型进行语义合并（例如将“打车”、“地铁”、“公交”合并为“交通出行”；将“买菜”、“外卖”、“奶茶”合并为“餐饮美食”）。
@@ -50,7 +60,7 @@ def query_range():
         }}
         """
         
-        response_stats = dashscope.Generation.call(
+        response_stats = Generation.call(
             model='qwen-turbo',
             messages=[{'role': 'user', 'content': prompt_stats}],
             result_format='message'
@@ -65,11 +75,8 @@ def query_range():
         content_stats = re.sub(r'\s*```$', '', content_stats).strip()
         stats_data = json.loads(content_stats)
 
-        # --- 数据重塑：将 AI 返回的结构转换为前端需要的结构 ---
-        # 前端需要: total_amount (数字) 和 category_breakdown (列表，含百分比)
+        # --- 数据重塑 ---
         total_amount = stats_data['total_spent']
-        
-        # 计算百分比并重命名字段
         category_breakdown = []
         for cat in stats_data['categories']:
             percentage = round((cat['amount'] / total_amount) * 100, 1)
@@ -79,7 +86,7 @@ def query_range():
                 "percentage": percentage
             })
 
-        # --- 第二阶段：AI 财务健康评估 (保持不变) ---
+        # --- 第二阶段：AI 财务健康评估 ---
         categories_summary = ", ".join([f"{c['name']}({c['amount']}元)" for c in stats_data['categories']])
         prompt_eval = f"""
         基于以下 {start_date} 到 {end_date} 的消费统计数据，请给出一份简短、专业且贴心的财务评估建议（建议尽量详细）：
@@ -89,7 +96,7 @@ def query_range():
         语气要像一位老朋友一样亲切。
         """
         
-        response_eval = dashscope.Generation.call(
+        response_eval = Generation.call(
             model='qwen-turbo',
             messages=[{'role': 'user', 'content': prompt_eval}],
             result_format='message'
@@ -99,14 +106,14 @@ def query_range():
         if response_eval.status_code == 200:
             ai_advice = response_eval.output.choices[0].message.content
 
-        # --- 最终返回：使用适配前端的新结构 ---
-        return jsonify({ 
+        # --- 最终返回 ---
+        return jsonify({
             'success': True,
-            'total_amount': total_amount,       # 直接平铺，方便前端读取
-            'category_breakdown': category_breakdown, # 带百分比的列表
-            'ai_advice': ai_advice              # AI 建议
+            'total_amount': total_amount,
+            'category_breakdown': category_breakdown,
+            'ai_advice': ai_advice
         })
-
+        
     except Exception as e:
         print(f"Error: {str(e)}")
         return jsonify({'success': False, 'error': str(e)})
