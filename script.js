@@ -402,12 +402,15 @@ if (analyzeBtn) {
                 `;
 
                 // 如果有后端传来的分类统计
-                if (resultData.category_breakdown && Object.keys(resultData.category_breakdown).length > 0) {
-                    for (const [cat, info] of Object.entries(resultData.category_breakdown)) {
-                        htmlContent += `<div style="display:flex; justify-content:space-between; border-bottom:1px dashed #eee; padding:5px 0;">
-                                            <span>${cat}</span>
-                                            <span>¥${info.amount} (${info.percentage}%)</span>
-                                        </div>`;
+                if (resultData.category_breakdown && resultData.category_breakdown.length > 0) {
+                    // 使用 for...of 直接遍历数组中的每一项
+                    for (const item of resultData.category_breakdown) {
+                        htmlContent += `
+                            <div style="display:flex; justify-content:space-between; border-bottom:1px dashed #eee; padding:5px 0;">
+                                <span>${item.name}</span>
+                                <span>¥${item.amount} (${item.percentage}%)</span>
+                            </div>
+                        `;
                     }
                 } else {
                     htmlContent += `<div style="color:#999; font-size:0.9em;">暂无详细分类数据</div>`;
