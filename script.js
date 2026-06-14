@@ -375,21 +375,34 @@ if (analyzeBtn) {
 
             // 2. 发送请求
             // 1. 获取当前用户的所有记账数据
-            const allRecords = getAllRecords(); 
+            const allRecords = getAllRecords();
+            
+            // 2. 筛选数据：只保留选中日期范围内的数据
+            const filteredRecords = {};
+            const startDate = new Date(startVal);
+            const endDate = new Date(endVal);
 
-            // 2. 发送请求
-            const response = await fetch(API_URL, { 
-                method: "POST", 
-                headers: { "Content-Type": "application/json" }, 
-                body: JSON.stringify({ 
-                    start_date: startVal, 
+            for (const [dateKey, records] of Object.entries(allRecords)) {
+                const recordDate = new Date(dateKey);
+                // 判断日期是否在选择的范围内
+                if (recordDate >= startDate && recordDate <= endDate) {
+                    filteredRecords[dateKey] = records;
+                }
+            }
+            // --- 【核心修复】结束 ---
+
+            // 3. 发送请求 (把筛选后的 filteredRecords 发送给后端)
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    start_date: startVal,
                     end_date: endVal,
-                    records: allRecords //  加上这一行！把所有数据发给后端
-                }) 
+                    records: filteredRecords // 【修改】这里发送的是筛选后的数据
+                })
             });
-
-            if (!response.ok) throw new Error("网络请求失败");
-            const resultData = await response.json();
 
             // 3. 渲染页面内容
             let htmlContent = "";
