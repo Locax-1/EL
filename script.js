@@ -374,13 +374,18 @@ if (analyzeBtn) {
             const API_URL = "https://el-ircv.vercel.app/api/query-range";
 
             // 2. 发送请求
-            const response = await fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    start_date: startVal,
-                    end_date: endVal
-                })
+            // 1. 获取当前用户的所有记账数据
+            const allRecords = getAllRecords(); 
+
+            // 2. 发送请求
+            const response = await fetch(API_URL, { 
+                method: "POST", 
+                headers: { "Content-Type": "application/json" }, 
+                body: JSON.stringify({ 
+                    start_date: startVal, 
+                    end_date: endVal,
+                    records: allRecords //  加上这一行！把所有数据发给后端
+                }) 
             });
 
             if (!response.ok) throw new Error("网络请求失败");
