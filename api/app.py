@@ -44,7 +44,7 @@ def query_range():
         records_str = "\n".join([f"日期:{r['date']}, 类型:{r['type']}, 金额:{r['amount']}" for r in records])
         
         prompt_stats = f"""
-        你是一个专业的财务数据分析师。以下是用户在 {start_man} 到 {end_date} 期间的原始消费记录：
+        你是一个专业的财务数据分析师。以下是用户在 {start_date} 到 {end_date} 期间的原始消费记录：
         {records_str}
         请执行以下任务：
         1. 对消费类型进行语义合并（例如将“打车”、“地铁”、“公交”合并为“交通出行”；将“买菜”、“外卖”、“奶茶”合并为“餐饮美食”）。
