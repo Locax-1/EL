@@ -409,6 +409,7 @@ if (analyzeBtn) {
 
             // A. 显示【消费统计】
             // 使用可选链和空值合并，确保即使数据缺失也不会报错
+            const resultData = filteredRecords; // 【补上这一行】
             const totalAmount = resultData.total_amount ?? 0;
             const categoryBreakdown = resultData.category_breakdown || [];
 
