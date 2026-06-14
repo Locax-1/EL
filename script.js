@@ -383,6 +383,7 @@ if (analyzeBtn) {
                 headers: { "Content-Type": "application/json" }, 
                 body: JSON.stringify({ 
                     start_date: startVal, 
+                    end_date: endVal,  
                     records: allRecords //  加上这一行！把所有数据发给后端
                 }) 
             });
