@@ -1,6 +1,7 @@
 const authPage = document.querySelector("#authPage");
 const calendarPage = document.querySelector("#calendarPage");
 const historyPage = document.querySelector("#historyPage");
+//update
 
 const usernameInput = document.querySelector("#username");
 const passwordInput = document.querySelector("#password");
